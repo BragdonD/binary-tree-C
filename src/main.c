@@ -1,3 +1,12 @@
+/**
+ * @file main.c
+ * @author Thomas DUCLOS
+ * @studentid 202232327
+ * @brief This program transform a n binary tree into a binary tree and then transform this binary tree into either a complete, proper or perfect binary tree
+ * @version 0.1
+ * @date 2022-11-15
+ * @copyright Copyright (c) 2022
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -5,14 +14,14 @@
 #include "SFML/Window.h"
 #include "SFML/Graphics.h"
 
-#define UNKNOWN_STRING "?"
-#define COUNT 1
-#define SCREEN_CENTER 600
-#define HEIGHT_BETWEEN_NODE 100
-#define MIN_HEIGHT 50
+#define UNKNOWN_STRING "?" ///String to represent the random data inside an added node
+#define SCREEN_CENTER 600  ///Center of the graphic window
+#define HEIGHT_BETWEEN_NODE 100 ///Y space between each node
+#define MIN_HEIGHT 50 ///Y offset
 
+/// @brief This is a structure to represent the node of a binary tree
 typedef struct Node_s {
-    char* elem;
+    char* elem; ///Content of the node
     struct Node_s *left;
     struct Node_s *right;
 } Node;
@@ -35,9 +44,9 @@ void makePerfect(Node* root, Node* newroot, const int maxdepth);
 int getNodeDepth(Node* root, Node* tofind);
 int getMaxDepth(Node* root);
 
-
 int main(int argc, char const *argv[])
 {
+    /// Check the command line parameters validity to generate the correct binary tree
     if(argc < 2) {
         printf("usage: main <type>=[complete|perfect|proper]"); 
         return EXIT_FAILURE;
@@ -46,13 +55,10 @@ int main(int argc, char const *argv[])
         printf("usage: main <type>=[complete|perfect|proper]"); 
         return EXIT_FAILURE;
     }
-    /// Transforming the n generic tree into a binary tree
-    /// We are applying the following rules :
-    ///     root stay the same
-    ///     right sibing of a node become right child of the same node
-    ///     left child stay the left child of the node
-    Node* root = initTree();
-    if(root == NULL) return EXIT_FAILURE;
+    Node* root = initTree(); ///Initialisation of the binary tree
+    if(root == NULL) return EXIT_FAILURE; ///Handle failure
+
+    /// Create the correct binary tree asked on the command line
     if(strcmp(argv[1], "complete") == 0) {
         makeCompleteBT(root);
     }
@@ -67,19 +73,19 @@ int main(int argc, char const *argv[])
     sfVideoMode mode = {1200, 900, 32};
     sfRenderWindow* window;
     window = sfRenderWindow_create(mode, "SFML window", sfResize | sfClose, NULL);
-    if(!window) {
+    if(!window) { ///Handle window creation failure
         printf("Failed to open graphic window!");
         return EXIT_FAILURE;
     }
-    ///Setup the font to draw some text
-    sfFont *font = sfFont_createFromFile("arial.ttf");
-    if(!font) {
+    ///Setup the font to draw some text 
+    sfFont *font = sfFont_createFromFile("arial.ttf"); ///Font to write the tree content
+    if(!font) { ///Handle font loading failure
         printf("Failed to load font!");
         return EXIT_FAILURE;
     }
 
-    sfEvent event;
-    drawTree(root, root, SCREEN_CENTER, 0, 2,window, font);
+    sfEvent event; ///Will allow us to close the rendering window later
+    drawTree(root, root, SCREEN_CENTER, 0, 2,window, font); ///Draw the screen in the rendering window
     sfRenderWindow_display(window);
 
     while (sfRenderWindow_isOpen(window)) {
@@ -92,7 +98,9 @@ int main(int argc, char const *argv[])
             }   
         }
     }
+    ///Free all the allocated data
     sfRenderWindow_destroy(window);
+    sfFont_destroy(font);
     freeTree(root);
     return 0;
 }
@@ -164,6 +172,9 @@ void freeTree(Node* root) {
     free(root);
 }
 
+/// @brief Function to get the maximum deoth of a tree recursively
+/// @param root A pointer toward the root of a tree
+/// @return the maximum depth of the tree
 int getMaxDepth(Node* root) {
     if(root == NULL) return 0;
     int l = getMaxDepth(root->left);
@@ -173,6 +184,10 @@ int getMaxDepth(Node* root) {
     return r + 1;
 }
 
+/// @brief Function to get the depth of a given node
+/// @param root the root of the tree
+/// @param tofind the node we need to find inside the tree
+/// @return the depth of the node
 int getNodeDepth(Node* root, Node* tofind) {
     if(root == NULL) return -1;
     int dist = -1;
@@ -183,6 +198,10 @@ int getNodeDepth(Node* root, Node* tofind) {
     return dist;
 }
 
+/// @brief Function to transform a random binary tree into a perfect one
+/// @param root the root of the tree. It will never be modified
+/// @param newroot the newroot of the tree which is modified at each recursive call
+/// @param maxdepth the max depth of the tree.
 void makePerfect(Node* root, Node* newroot, const int maxdepth) {
     if(newroot == NULL) return; 
     if(newroot->left == NULL && getNodeDepth(root, newroot) + 1 != maxdepth) {
@@ -195,14 +214,18 @@ void makePerfect(Node* root, Node* newroot, const int maxdepth) {
     makePerfect(root, newroot->right, maxdepth);
 }
 
+/// @brief Helper function to make perfect binary tree with less parameters
+/// @param root the root of the binary tree
 void makePerfectBT(Node* root) {
     makePerfect(root, root, getMaxDepth(root));
 }
 
+/// @brief Function to make a proper binary tree
+/// @param root the root of the binary tree
 void makeProperBT(Node* root) {
     if(root == NULL) return;
     if(root->left == NULL && root->right == NULL) return;
-    if(root->left == NULL) ///Only left is NULL
+    if(root->left == NULL)
         insertLeft(root, UNKNOWN_STRING);
     if(root->right == NULL)
         insertRight(root, UNKNOWN_STRING);
@@ -210,9 +233,14 @@ void makeProperBT(Node* root) {
     makeProperBT(root->right);
 }
 
+/// @brief Function to make a complete binary tree
+/// @param root the root of the tree.
+/// @param newroot the newroot of the tree which is modified at each recursive call
+/// @param isCompleted boolean to test if we need to add children on the last line
 void makeCompleteBTRecursive(Node* root, Node* newroot,  bool* isCompleted) {
     if(newroot == NULL) return;
-    if(newroot->right != NULL && getNodeDepth(root, newroot) == getMaxDepth(root) - 2)
+    /// Check to see if the children are the most left possible
+    if((newroot->right != NULL || newroot->left) && getNodeDepth(root, newroot) == getMaxDepth(root) - 2)
         *isCompleted = true;
     if(*isCompleted && getNodeDepth(root, newroot) != getMaxDepth(root) - 1) {
         if(newroot->left == NULL)
@@ -224,6 +252,10 @@ void makeCompleteBTRecursive(Node* root, Node* newroot,  bool* isCompleted) {
     makeCompleteBTRecursive(root, newroot->left, isCompleted);
 }
 
+/// @brief Function to fill the complete tree to depth - 2
+/// @param root the root of the tree
+/// @param newroot the newroot of the tree which is modified at each recursive call
+/// @param maxdepth the max depth of the tree
 void makeCompleteTree_Fill(Node* root, Node* newroot, const int maxdepth) {
     if(newroot == NULL) return; 
     if(getNodeDepth(root, newroot) + 1 == maxdepth) return;
@@ -237,6 +269,8 @@ void makeCompleteTree_Fill(Node* root, Node* newroot, const int maxdepth) {
     makeCompleteTree_Fill(root, newroot->right, maxdepth);
 }
 
+/// @brief Helper function to reduce the number of parameter to make a complete binary tree
+/// @param root the root of the tree
 void makeCompleteBT(Node* root) {
     bool isCompleted = false;
     int maxdepth = getMaxDepth(root) -1;
@@ -244,6 +278,12 @@ void makeCompleteBT(Node* root) {
     makeCompleteBTRecursive(root, root, &isCompleted);
 }
 
+/// @brief Function to initialise the binary tree with the n generic tree.
+/// @brief We follow the following rules:
+/// @brief - The root of the Binary Tree is the Root of the Generic Tree.
+/// @brief - The left child of a node in the Generic Tree is the Left child of that node in the Binary Tree.
+/// @brief - The right sibling of any node in the Generic Tree is the Right child of that node in the Binary Tree.
+/// @return the root of the binary tree
 Node* initTree() {
     Node* root = insertRoot("A");
     insertLeft(root, "B");
@@ -259,16 +299,24 @@ Node* initTree() {
     return root;
 }
 
+/// @brief Function to draw a node of the tree to the rendering window
+/// @param window the csfml rendering window
+/// @param font the csfml font
+/// @param x1 the position of the child circle
+/// @param x2 the position of the parent circle
+/// @param depth the depth of the node
+/// @param str the content of the node
 void drawNode(sfRenderWindow* window, sfFont* font, int x1, int x2, int depth, char* str) {
     int y = depth * HEIGHT_BETWEEN_NODE + MIN_HEIGHT;
 
+    /// Init the Circle
     sfCircleShape *circle = sfCircleShape_create();
     sfVector2f circle_position = {x1, y};
     sfVector2f text_position = {x1 + 3, y};
     sfCircleShape_setFillColor(circle, sfWhite);
     sfCircleShape_setRadius(circle, 8.0f);
     sfCircleShape_setPosition(circle, circle_position);
-
+    /// Init the text
     sfText* text = sfText_create();
     sfText_setString(text, str);
     sfText_setColor(text, sfRed);
@@ -276,23 +324,32 @@ void drawNode(sfRenderWindow* window, sfFont* font, int x1, int x2, int depth, c
     sfText_setPosition(text, text_position);
     sfText_setCharacterSize(text, 15);
 
-    sfRenderWindow_drawCircleShape(window,circle, NULL);
+    sfRenderWindow_drawCircleShape(window,circle, NULL); ///Draw the circle
     
-    if(x2 != 0) {
-        sfVertexArray *line = sfVertexArray_create();
+    if(x2 != 0) { ///test if it is not the first node
+        sfVertexArray *line = sfVertexArray_create(); ///Init the line
         sfVertex p1 = {{x1+4,y}, sfWhite}, p2 = {{x2+4,y-HEIGHT_BETWEEN_NODE}, sfWhite};
         sfVertexArray_append(line, p1);
         sfVertexArray_append(line, p2);
         sfVertexArray_setPrimitiveType(line, sfLines);
-        sfRenderWindow_drawVertexArray(window, line, NULL);
+        sfRenderWindow_drawVertexArray(window, line, NULL); ///Draw the line
         sfVertexArray_destroy(line);
     }
 
-    sfRenderWindow_drawText(window, text, NULL);
+    sfRenderWindow_drawText(window, text, NULL); /// Draw the text
+
     sfCircleShape_destroy(circle);
     sfText_destroy(text);
 }
 
+/// @brief Recursive functiion to draw a binary tree
+/// @param root the root of the tree
+/// @param newRoot the newroot of the tree which is modified at each recursive call 
+/// @param x the x position of the node
+/// @param last_x the x position of the parent node
+/// @param tab the number of time we need to divise the distance
+/// @param window the rendering window
+/// @param font the font used to print the text
 void drawTree(Node* root, Node* newRoot, int x, int last_x, int tab, sfRenderWindow *window, sfFont* font){
     if(newRoot == NULL) return;
     int depth = getNodeDepth(root, newRoot);

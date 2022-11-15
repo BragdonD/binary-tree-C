@@ -4,3 +4,6 @@
 *.exe
 *.o
 *.d
+*.zip
+*.tar
+/rendu
