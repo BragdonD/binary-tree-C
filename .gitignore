@@ -1,0 +1,6 @@
+/.vscode
+/CSFML
+*.dll
+*.exe
+*.o
+*.d
